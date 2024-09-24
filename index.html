@@ -5,117 +5,127 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Join Queue</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      background-color: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
     }
 
     form {
-      max-width: 400px;
-      margin: auto;
+      display: flex;
+      flex-direction: column;
     }
 
     label {
-      display: block;
-      margin-top: 10px;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
     }
 
     input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      margin-bottom: 20px;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
     }
 
     button {
-      padding: 10px 20px;
-      background-color: #007BFF;
+      padding: 0.75rem;
+      background-color: #007bff;
       color: white;
       border: none;
+      border-radius: 4px;
       cursor: pointer;
+      font-size: 1rem;
     }
 
     button:hover {
       background-color: #0056b3;
     }
 
-    .message {
-      margin-top: 20px;
-      font-size: 18px;
-    }
-
-    .error {
-      color: red;
-    }
-
-    .success {
+    #message {
+      margin-top: 1rem;
+      font-size: 1rem;
       color: green;
+      text-align: center;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Join Queue</h1>
+    <form id="joinQueueForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+      
+      <label for="phone">Phone:</label>
+      <input type="text" id="phone" name="phone" required>
+      
+      <button type="submit">Join Queue</button>
+      <p id="message"></p>
+    </form>
+  </div>
 
-  <h1>Join Queue for Event</h1>
+<script>
+  document.getElementById('joinQueueForm').addEventListener('submit', function(event) {
+    event.preventDefault();
 
-  <form id="joinQueueForm">
-    <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required>
+    const name = document.getElementById('name').value;
+    const phone = document.getElementById('phone').value;
 
-    <label for="phone">Phone:</label>
-    <input type="text" id="phone" name="phone" required>
-
-    <input type="hidden" id="adminInputId" value="">
-
-    <button type="submit">Join Queue</button>
-  </form>
-
-  <div class="message" id="message"></div>
-
-  <script>
-  
+    // Get the admin_input_id from the URL
     const urlParams = new URLSearchParams(window.location.search);
     const adminInputId = urlParams.get('admin_input_id');
-    document.getElementById('adminInputId').value = adminInputId;
 
- 
-    document.getElementById('joinQueueForm').addEventListener('submit', async function(event) {
-      event.preventDefault();
+    const messageElement = document.getElementById('message');
 
-
-      const name = document.getElementById('name').value;
-      const phone = document.getElementById('phone').value;
-      const adminInputId = document.getElementById('adminInputId').value;
-
-
-      if (!adminInputId) {
-        document.getElementById('message').innerHTML = '<p class="error">Invalid admin input ID.</p>';
-        return;
+    // Use the admin_input_id in the API call
+    fetch(`/api/join-queue/${adminInputId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, phone })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        messageElement.style.color = 'red';
+        messageElement.textContent = data.error;
+      } else {
+        messageElement.style.color = 'green';
+        messageElement.textContent = `Success: ${data.message}`;
       }
-
-      try {
-
-        const response = await fetch(`http://127.0.0.1:8000/create-teams/${adminInputId}/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name, phone }),
-        });
-
-        const data = await response.json();
-
-      
-        if (response.ok) {
-          document.getElementById('message').innerHTML = `<p class="success">${data.message} Your position in the queue: ${data.queue_position}</p>`;
-        } else {
-          document.getElementById('message').innerHTML = `<p class="error">${data.error}</p>`;
-        }
-
-      } catch (error) {
-        document.getElementById('message').innerHTML = '<p class="error">An unexpected error occurred.</p>';
-      }
+    })
+    .catch(error => {
+      messageElement.style.color = 'red';
+      messageElement.textContent = 'An error occurred. Please try again.';
     });
-  </script>
+  });
+</script>
 
 </body>
 </html>
