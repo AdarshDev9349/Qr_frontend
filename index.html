@@ -8,6 +8,7 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
+      background-color: #f2f2f2;
     }
 
     #joinQueueForm {
@@ -15,15 +16,31 @@
       flex-direction: column;
       width: 300px;
       margin: 50px auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
     input, button {
       padding: 10px;
       margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: #007BFF;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
     }
 
     #loadingPopup {
-      display: none;
+      display: flex;
       position: fixed;
       top: 0;
       left: 0;
@@ -60,7 +77,6 @@
   </div>
 
   <!-- Loading popup while waiting in queue -->
-  <div id="loadingPopup">Please wait, you are in the queue...</div>
 
   <!-- Team Page that will display the team members once the queue is full -->
   <div id="teamPage">
@@ -77,7 +93,7 @@
 
     // Event listener for form submission
     document.querySelector('button').addEventListener('click', function(event) {
-      event.preventDefault();
+      event.preventDefault(); // Prevent default form submission
 
       const name = document.getElementById('name').value;
       const phone = document.getElementById('phone').value;
@@ -99,7 +115,8 @@
       // Show loading popup after form submission
       const loadingPopup = document.getElementById('loadingPopup');
       const joinQueueForm = document.getElementById('joinQueueForm');
-      
+
+      // Hide the form and show the loading popup only after successful validation
       joinQueueForm.style.display = 'none';  // Hide the form
       loadingPopup.style.display = 'flex';  // Show loading popup
 
@@ -119,7 +136,7 @@
           joinQueueForm.style.display = 'block';
           loadingPopup.style.display = 'none';
         } else {
-          // Start polling for team assignments only if submission is successful
+          // Start polling for team assignments
           pollForTeamAssignment(adminInputId);
         }
       })
@@ -141,7 +158,7 @@
         })
         .then(response => response.json())
         .then(data => {
-          if (data.length > 0) {
+          if (Array.isArray(data) && data.length > 0) {
             clearInterval(interval);  // Stop polling once team assignments are available
             displayTeamMembers(data);  // Show team data
           }
@@ -170,7 +187,8 @@
         teamMembersList.appendChild(listItem);
       });
     }
-  </script>
+</script>
+
 
 </body>
 </html>
