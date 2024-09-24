@@ -103,7 +103,7 @@
     const messageElement = document.getElementById('message');
 
     // Use the admin_input_id in the API call
-    fetch(`/api/join-queue/${adminInputId}/`, {
+    fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
