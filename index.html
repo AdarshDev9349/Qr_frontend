@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Join Queue</title>
   <style>
-    /* Basic styling for the form and popup */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -44,8 +43,8 @@
       padding: 20px;
     }
 
-    .hidden {
-      display: none;
+    #errorMessage {
+      color: red;
     }
   </style>
 </head>
@@ -57,7 +56,7 @@
     <input type="text" id="name" placeholder="Enter your name" required>
     <input type="text" id="phone" placeholder="Enter your phone number" required>
     <button type="submit">Join Queue</button>
-    <p id="message"></p>
+    <p id="errorMessage"></p>
   </div>
 
   <!-- Loading popup while waiting in queue -->
@@ -70,30 +69,41 @@
   </div>
 
   <script>
-    // Add event listener to the form for form submission
+    // Function to show error message
+    function showError(message) {
+      const errorMessageElement = document.getElementById('errorMessage');
+      errorMessageElement.textContent = message;
+    }
+
+    // Event listener for form submission
     document.querySelector('button').addEventListener('click', function(event) {
       event.preventDefault();
 
       const name = document.getElementById('name').value;
       const phone = document.getElementById('phone').value;
+      const errorMessageElement = document.getElementById('errorMessage');
 
-      // Clear any previous error messages
-      const messageElement = document.getElementById('message');
-      messageElement.textContent = '';
-
+      // Validate form fields
       if (!name || !phone) {
-        messageElement.textContent = "Please fill in all fields.";
+        showError("Please fill in all fields.");
         return;
       }
 
-      // Get the admin_input_id from the URL (adjust this part based on how admin_input_id is passed in your setup)
-      const urlParams = new URLSearchParams(window.location.search);
-      const adminInputId = urlParams.get('admin_input_id');  // make sure this matches your backend
+      // Hide error message
+      errorMessageElement.textContent = '';
 
+      // Get the admin_input_id from the URL (you can adjust this based on your setup)
+      const urlParams = new URLSearchParams(window.location.search);
+      const adminInputId = urlParams.get('admin_input_id');  // Get admin_input_id from URL query params
+
+      // Show loading popup after form submission
       const loadingPopup = document.getElementById('loadingPopup');
       const joinQueueForm = document.getElementById('joinQueueForm');
+      
+      joinQueueForm.style.display = 'none';  // Hide the form
+      loadingPopup.style.display = 'flex';  // Show loading popup
 
-      // Submit the form to join the queue
+      // Send the form data to the backend API
       fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
         method: 'POST',
         headers: {
@@ -104,24 +114,23 @@
       .then(response => response.json())
       .then(data => {
         if (data.error) {
-          messageElement.style.color = 'red';
-          messageElement.textContent = data.error;
+          // Show error and reset UI if form submission fails
+          showError(data.error);
+          joinQueueForm.style.display = 'block';
+          loadingPopup.style.display = 'none';
         } else {
-          // Hide the form and show the loading popup
-          joinQueueForm.style.display = 'none';
-          loadingPopup.style.display = 'flex';
-
-          // Start polling for team assignment after form submission
+          // Start polling for team assignments
           pollForTeamAssignment(adminInputId);
         }
       })
       .catch(error => {
-        messageElement.style.color = 'red';
-        messageElement.textContent = 'An error occurred. Please try again.';
+        showError("An error occurred. Please try again.");
+        joinQueueForm.style.display = 'block';  // Reset form display
+        loadingPopup.style.display = 'none';  // Hide loading popup
       });
     });
 
-    // Poll the server every 5 seconds to check if teams are assigned
+    // Polling function to check if teams are assigned
     function pollForTeamAssignment(adminInputId) {
       const interval = setInterval(() => {
         fetch(`http://127.0.0.1:8000/teams/${adminInputId}/`, {
@@ -133,27 +142,28 @@
         .then(response => response.json())
         .then(data => {
           if (data.length > 0) {
-            clearInterval(interval);  // Stop polling
-            displayTeamMembers(data);  // Display the team data
+            clearInterval(interval);  // Stop polling once team assignments are available
+            displayTeamMembers(data);  // Show team data
           }
         })
         .catch(error => {
           console.error('Polling error:', error);
         });
-      }, 5000); // Poll every 5 seconds
+      }, 5000);  // Poll every 5 seconds
     }
 
-    // Display the team members once the queue is full
+    // Display the team members
     function displayTeamMembers(teamData) {
       const loadingPopup = document.getElementById('loadingPopup');
       const teamPage = document.getElementById('teamPage');
       const teamMembersList = document.getElementById('teamMembers');
 
-      // Hide the loading popup and show the team page
+      // Hide loading popup and show team page
       loadingPopup.style.display = 'none';
       teamPage.style.display = 'block';
 
       // Populate the team members list
+      teamMembersList.innerHTML = '';  // Clear any existing items
       teamData.forEach(member => {
         const listItem = document.createElement('li');
         listItem.textContent = `Name: ${member.name}, Phone: ${member.phone}, Team: ${member.team}`;
