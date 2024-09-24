@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Join Queue</title>
   <style>
-    /* Basic styling for the form */
+    /* Basic styling for the form and popup */
     body {
       font-family: Arial, sans-serif;
+      text-align: center;
     }
 
     #joinQueueForm {
@@ -35,12 +36,12 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      z-index: 1000;
     }
 
     #teamPage {
       display: none;
       padding: 20px;
-      margin: 20px;
     }
 
     .hidden {
@@ -60,7 +61,7 @@
   </div>
 
   <!-- Loading popup while waiting in queue -->
-  <div id="loadingPopup">You are in the queue. Please wait...</div>
+  <div id="loadingPopup">Please wait, you are in the queue...</div>
 
   <!-- Team Page that will display the team members once the queue is full -->
   <div id="teamPage">
@@ -69,11 +70,17 @@
   </div>
 
   <script>
-    document.getElementById('joinQueueForm').addEventListener('submit', function(event) {
+    // Add event listener to the form for form submission
+    document.querySelector('button').addEventListener('click', function(event) {
       event.preventDefault();
 
       const name = document.getElementById('name').value;
       const phone = document.getElementById('phone').value;
+
+      if (!name || !phone) {
+        document.getElementById('message').textContent = "Please fill in all fields.";
+        return;
+      }
 
       // Get the admin_input_id from the URL (adjust this part based on how admin_input_id is passed in your setup)
       const urlParams = new URLSearchParams(window.location.search);
@@ -84,10 +91,6 @@
       const joinQueueForm = document.getElementById('joinQueueForm');
       const teamPage = document.getElementById('teamPage');
       const teamMembersList = document.getElementById('teamMembers');
-
-      // Hide the form and show the loading popup
-      joinQueueForm.style.display = 'none';
-      loadingPopup.style.display = 'flex';
 
       // Submit the form to join the queue
       fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
@@ -102,18 +105,18 @@
         if (data.error) {
           messageElement.style.color = 'red';
           messageElement.textContent = data.error;
-          loadingPopup.style.display = 'none';
-          joinQueueForm.style.display = 'block';
         } else {
-          messageElement.textContent = '';
+          // Hide the form and show the loading popup
+          joinQueueForm.style.display = 'none';
+          loadingPopup.style.display = 'flex';
+
+          // Start polling for team assignment after form submission
           pollForTeamAssignment(adminInputId);
         }
       })
       .catch(error => {
         messageElement.style.color = 'red';
         messageElement.textContent = 'An error occurred. Please try again.';
-        loadingPopup.style.display = 'none';
-        joinQueueForm.style.display = 'block';
       });
     });
 
@@ -129,8 +132,8 @@
         .then(response => response.json())
         .then(data => {
           if (data.length > 0) {
-            clearInterval(interval);
-            displayTeamMembers(data);
+            clearInterval(interval);  // Stop polling
+            displayTeamMembers(data);  // Display the team data
           }
         })
         .catch(error => {
@@ -152,7 +155,7 @@
       // Populate the team members list
       teamData.forEach(member => {
         const listItem = document.createElement('li');
-        listItem.textContent = `Name: ${member.name} - Phone: ${member.phone} - Team: ${member.team}`;
+        listItem.textContent = `Name: ${member.name}, Phone: ${member.phone}, Team: ${member.team}`;
         teamMembersList.appendChild(listItem);
       });
     }
