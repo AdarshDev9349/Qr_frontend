@@ -5,189 +5,130 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Join Queue</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f2f2f2;
+      background-color: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
 
-    #joinQueueForm {
+    .container {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    form {
       display: flex;
       flex-direction: column;
-      width: 300px;
-      margin: 50px auto;
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
-    input, button {
-      padding: 10px;
-      margin: 10px 0;
+    label {
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
+    input {
+      padding: 0.5rem;
+      margin-bottom: 1rem;
       border: 1px solid #ccc;
       border-radius: 4px;
+      font-size: 1rem;
     }
 
     button {
-      background-color: #007BFF;
+      padding: 0.75rem;
+      background-color: #007bff;
       color: white;
+      border: none;
+      border-radius: 4px;
       cursor: pointer;
+      font-size: 1rem;
     }
 
     button:hover {
       background-color: #0056b3;
     }
 
-    #loadingPopup {
-      display: flex;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      font-size: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    #teamPage {
-      display: none;
-      padding: 20px;
-    }
-
-    #errorMessage {
-      color: red;
+    #message {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: green;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-
-  <!-- Form for joining the queue -->
-  <div id="joinQueueForm">
-    <h2>Join Queue</h2>
-    <input type="text" id="name" placeholder="Enter your name" required>
-    <input type="text" id="phone" placeholder="Enter your phone number" required>
-    <button type="submit">Join Queue</button>
-    <p id="errorMessage"></p>
+  <div class="container">
+    <h1>Join Queue</h1>
+    <form id="joinQueueForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+      
+      <label for="phone">Phone:</label>
+      <input type="text" id="phone" name="phone" required>
+      
+      <button type="submit">Join Queue</button>
+      <p id="message"></p>
+    </form>
   </div>
 
-  <!-- Loading popup while waiting in queue -->
+<script>
+  document.getElementById('joinQueueForm').addEventListener('submit', function(event) {
+    event.preventDefault();
 
-  <!-- Team Page that will display the team members once the queue is full -->
-  <div id="teamPage">
-    <h2>Your Team</h2>
-    <ul id="teamMembers"></ul>
-  </div>
+    const name = document.getElementById('name').value;
+    const phone = document.getElementById('phone').value;
 
-  <script>
-    // Function to show error message
-    function showError(message) {
-      const errorMessageElement = document.getElementById('errorMessage');
-      errorMessageElement.textContent = message;
-    }
+    // Get the admin_input_id from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const adminInputId = urlParams.get('admin_input_id');
 
-    // Event listener for form submission
-    document.querySelector('button').addEventListener('click', function(event) {
-      event.preventDefault(); // Prevent default form submission
+    const messageElement = document.getElementById('message');
 
-      const name = document.getElementById('name').value;
-      const phone = document.getElementById('phone').value;
-      const errorMessageElement = document.getElementById('errorMessage');
-
-      // Validate form fields
-      if (!name || !phone) {
-        showError("Please fill in all fields.");
-        return;
+    // Use the admin_input_id in the API call
+    fetch(`/api/join-queue/${adminInputId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, phone })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        messageElement.style.color = 'red';
+        messageElement.textContent = data.error;
+      } else {
+        messageElement.style.color = 'green';
+        messageElement.textContent = `Success: ${data.message}`;
       }
-
-      // Hide error message
-      errorMessageElement.textContent = '';
-
-      // Get the admin_input_id from the URL (you can adjust this based on your setup)
-      const urlParams = new URLSearchParams(window.location.search);
-      const adminInputId = urlParams.get('admin_input_id');  // Get admin_input_id from URL query params
-
-      // Show loading popup after form submission
-      const loadingPopup = document.getElementById('loadingPopup');
-      const joinQueueForm = document.getElementById('joinQueueForm');
-
-      // Hide the form and show the loading popup only after successful validation
-      joinQueueForm.style.display = 'none';  // Hide the form
-      loadingPopup.style.display = 'flex';  // Show loading popup
-
-      // Send the form data to the backend API
-      fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, phone })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.error) {
-          // Show error and reset UI if form submission fails
-          showError(data.error);
-          joinQueueForm.style.display = 'block';
-          loadingPopup.style.display = 'none';
-        } else {
-          // Start polling for team assignments
-          pollForTeamAssignment(adminInputId);
-        }
-      })
-      .catch(error => {
-        showError("An error occurred. Please try again.");
-        joinQueueForm.style.display = 'block';  // Reset form display
-        loadingPopup.style.display = 'none';  // Hide loading popup
-      });
+    })
+    .catch(error => {
+      messageElement.style.color = 'red';
+      messageElement.textContent = 'An error occurred. Please try again.';
     });
-
-    // Polling function to check if teams are assigned
-    function pollForTeamAssignment(adminInputId) {
-      const interval = setInterval(() => {
-        fetch(`http://127.0.0.1:8000/teams/${adminInputId}/`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (Array.isArray(data) && data.length > 0) {
-            clearInterval(interval);  // Stop polling once team assignments are available
-            displayTeamMembers(data);  // Show team data
-          }
-        })
-        .catch(error => {
-          console.error('Polling error:', error);
-        });
-      }, 5000);  // Poll every 5 seconds
-    }
-
-    // Display the team members
-    function displayTeamMembers(teamData) {
-      const loadingPopup = document.getElementById('loadingPopup');
-      const teamPage = document.getElementById('teamPage');
-      const teamMembersList = document.getElementById('teamMembers');
-
-      // Hide loading popup and show team page
-      loadingPopup.style.display = 'none';
-      teamPage.style.display = 'block';
-
-      // Populate the team members list
-      teamMembersList.innerHTML = '';  // Clear any existing items
-      teamData.forEach(member => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `Name: ${member.name}, Phone: ${member.phone}, Team: ${member.team}`;
-        teamMembersList.appendChild(listItem);
-      });
-    }
+  });
 </script>
+
+</body>
+</html>
 
 
 </body>
