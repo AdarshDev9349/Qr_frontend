@@ -77,8 +77,12 @@
       const name = document.getElementById('name').value;
       const phone = document.getElementById('phone').value;
 
+      // Clear any previous error messages
+      const messageElement = document.getElementById('message');
+      messageElement.textContent = '';
+
       if (!name || !phone) {
-        document.getElementById('message').textContent = "Please fill in all fields.";
+        messageElement.textContent = "Please fill in all fields.";
         return;
       }
 
@@ -86,11 +90,8 @@
       const urlParams = new URLSearchParams(window.location.search);
       const adminInputId = urlParams.get('admin_input_id');  // make sure this matches your backend
 
-      const messageElement = document.getElementById('message');
       const loadingPopup = document.getElementById('loadingPopup');
       const joinQueueForm = document.getElementById('joinQueueForm');
-      const teamPage = document.getElementById('teamPage');
-      const teamMembersList = document.getElementById('teamMembers');
 
       // Submit the form to join the queue
       fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
