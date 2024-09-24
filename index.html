@@ -8,7 +8,6 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      background-color: #f2f2f2; /* Added background color for better visibility */
     }
 
     #joinQueueForm {
@@ -16,27 +15,11 @@
       flex-direction: column;
       width: 300px;
       margin: 50px auto;
-      background-color: white; /* Form background */
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Added box shadow */
     }
 
     input, button {
       padding: 10px;
       margin: 10px 0;
-      border: 1px solid #ccc; /* Added border to inputs */
-      border-radius: 4px; /* Rounded corners */
-    }
-
-    button {
-      background-color: #007BFF; /* Button color */
-      color: white; /* Text color */
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #0056b3; /* Darker shade on hover */
     }
 
     #loadingPopup {
@@ -136,7 +119,7 @@
           joinQueueForm.style.display = 'block';
           loadingPopup.style.display = 'none';
         } else {
-          // Start polling for team assignments
+          // Start polling for team assignments only if submission is successful
           pollForTeamAssignment(adminInputId);
         }
       })
