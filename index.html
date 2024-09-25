@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,6 +72,13 @@
       color: green;
       text-align: center;
     }
+
+    #teamInfo {
+      margin-top: 1rem;
+      font-size: 1rem;
+      text-align: center;
+      display: none; /* Initially hidden */
+    }
   </style>
 </head>
 <body>
@@ -87,6 +93,7 @@
       
       <button type="submit">Join Queue</button>
       <p id="message"></p>
+      <p id="teamInfo"></p> <!-- Team info element -->
     </form>
   </div>
 
@@ -102,6 +109,7 @@
     const adminInputId = urlParams.get('admin_input_id');
 
     const messageElement = document.getElementById('message');
+    const teamInfoElement = document.getElementById('teamInfo');
 
     // Use the admin_input_id in the API call
     fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
@@ -116,17 +124,43 @@
       if (data.error) {
         messageElement.style.color = 'red';
         messageElement.textContent = data.error;
+        teamInfoElement.style.display = 'none'; // Hide team info
       } else {
         messageElement.style.color = 'green';
         messageElement.textContent = `Success: ${data.message}`;
+
+        // Fetch the team assignments
+        fetch(`http://127.0.0.1:8000/teams/${adminInputId}/`)
+        .then(response => response.json())
+        .then(teamData => {
+          // Find the user's team based on their position
+          const userQueuePosition = data.queue_position; // Use the queue position returned by the first API call
+          const userTeam = teamData.find(user => user.queue_position === userQueuePosition);
+
+          if (userTeam) {
+            teamInfoElement.style.color = 'blue';
+            teamInfoElement.textContent = `Your team: ${userTeam.team}`; // Show team name
+          } else {
+            teamInfoElement.textContent = `Team assignment not found.`;
+          }
+          teamInfoElement.style.display = 'block'; // Show the team info
+          document.getElementById('joinQueueForm').style.display = 'none'; // Hide the form
+        })
+        .catch(error => {
+          teamInfoElement.style.color = 'red';
+          teamInfoElement.textContent = 'Error fetching team assignment.';
+          teamInfoElement.style.display = 'block'; // Show error message
+        });
       }
     })
     .catch(error => {
       messageElement.style.color = 'red';
       messageElement.textContent = 'An error occurred. Please try again.';
+      teamInfoElement.style.display = 'none'; // Hide team info
     });
   });
 </script>
 
 </body>
 </html>
+
