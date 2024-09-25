@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Join Queue</title>
   <style>
+    /* Your existing styles */
     * {
       box-sizing: border-box;
     }
@@ -69,8 +70,13 @@
     #message {
       margin-top: 1rem;
       font-size: 1rem;
-      color: green;
       text-align: center;
+    }
+
+    #loader {
+      display: none;
+      font-size: 1rem;
+      color: orange;
     }
   </style>
 </head>
@@ -86,6 +92,7 @@
       
       <button type="submit">Join Queue</button>
       <p id="message"></p>
+      <p id="loader">Please wait, you're in the queue...</p> <!-- Loading message -->
     </form>
   </div>
 
@@ -96,13 +103,16 @@
     const name = document.getElementById('name').value;
     const phone = document.getElementById('phone').value;
 
-    // Get the admin_input_id from the URL
     const urlParams = new URLSearchParams(window.location.search);
     const adminInputId = urlParams.get('admin_input_id');
 
     const messageElement = document.getElementById('message');
+    const loaderElement = document.getElementById('loader');
 
-    // Use the admin_input_id in the API call
+    // Show loading message
+    loaderElement.style.display = 'block';
+    messageElement.textContent = '';
+
     fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
       method: 'POST',
       headers: {
@@ -112,6 +122,9 @@
     })
     .then(response => response.json())
     .then(data => {
+      // Hide loading message
+      loaderElement.style.display = 'none';
+
       if (data.error) {
         messageElement.style.color = 'red';
         messageElement.textContent = data.error;
@@ -121,15 +134,12 @@
       }
     })
     .catch(error => {
+      loaderElement.style.display = 'none';
       messageElement.style.color = 'red';
       messageElement.textContent = 'An error occurred. Please try again.';
     });
   });
 </script>
-
-</body>
-</html>
-
 
 </body>
 </html>
