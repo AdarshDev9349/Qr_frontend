@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,8 +69,24 @@
     #message {
       margin-top: 1rem;
       font-size: 1rem;
-      color: green;
       text-align: center;
+    }
+
+    /* Loading spinner */
+    #loading {
+      display: none;
+      border: 4px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 4px solid #007bff;
+      width: 30px;
+      height: 30px;
+      animation: spin 2s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -88,6 +103,9 @@
       <button type="submit">Join Queue</button>
       <p id="message"></p>
     </form>
+
+    <!-- Loading spinner -->
+    <div id="loading"></div>
   </div>
 
 <script>
@@ -96,14 +114,16 @@
 
     const name = document.getElementById('name').value;
     const phone = document.getElementById('phone').value;
+    const messageElement = document.getElementById('message');
+    const loadingSpinner = document.getElementById('loading');
 
     // Get the admin_input_id from the URL
     const urlParams = new URLSearchParams(window.location.search);
     const adminInputId = urlParams.get('admin_input_id');
 
-    const messageElement = document.getElementById('message');
+    // Show loading spinner
+    loadingSpinner.style.display = 'block';
 
-    // Use the admin_input_id in the API call
     fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
       method: 'POST',
       headers: {
@@ -119,15 +139,38 @@
       } else {
         messageElement.style.color = 'green';
         messageElement.textContent = `Success: ${data.message}`;
+        
+        if (data.queue_full) {
+          // Redirect to the team page with the assigned team details
+          window.location.href = `team.html?team=${data.team}`;
+        } else {
+          pollQueueStatus(adminInputId);  // Poll the queue status
+        }
       }
+
+      // Hide loading spinner
+      loadingSpinner.style.display = 'none';
     })
     .catch(error => {
       messageElement.style.color = 'red';
       messageElement.textContent = 'An error occurred. Please try again.';
+      loadingSpinner.style.display = 'none';
     });
   });
+
+  function pollQueueStatus(adminInputId) {
+    const interval = setInterval(() => {
+      fetch(`http://127.0.0.1:8000/queue-status/${adminInputId}/`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.queue_full) {
+            clearInterval(interval);  // Stop polling when the queue is full
+            window.location.href = `team.html?team=${data.team}`;
+          }
+        });
+    }, 5000);  // Poll every 5 seconds
+  }
 </script>
 
 </body>
 </html>
-
