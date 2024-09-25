@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Members</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 0.5rem;
+      border-bottom: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Team Members</h1>
+    <ul id="teamMembersList"></ul>
+  </div>
+
+  <script>
+    // Get the team number from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const teamNumber = urlParams.get('team');
+
+    // Get the admin_input_id from the URL (or set it somewhere else in your flow)
+    const adminInputId = urlParams.get('admin_input_id');
+
+    // Fetch team members based on the team number
+    fetch(`http://127.0.0.1:8000/teams/${adminInputId}/`)
+      .then(response => response.json())
+      .then(data => {
+        const teamMembersList = document.getElementById('teamMembersList');
+
+        // Filter members for the specific team
+        const teamMembers = data.filter(member => member.team === parseInt(teamNumber));
+
+        // Display team members
+        if (teamMembers.length === 0) {
+          teamMembersList.innerHTML = '<li>No members found for this team.</li>';
+        } else {
+          teamMembers.forEach(member => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${member.name} (${member.phone})`;
+            teamMembersList.appendChild(listItem);
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching team members:', error);
+      });
+  </script>
+</body>
+</html>
