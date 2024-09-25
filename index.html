@@ -165,7 +165,9 @@
         .then(data => {
           if (data.queue_full) {
             clearInterval(interval);  // Stop polling when the queue is full
-            window.location.href = `team.html?team=${data.team}`;
+            window.location.href = `team.html?team=${data.team}&admin_input_id=${adminInputId}`;
+            // If queue is full, redirect to the team page
+
           }
         });
     }, 5000);  // Poll every 5 seconds
