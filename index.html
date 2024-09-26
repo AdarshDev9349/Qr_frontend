@@ -5,85 +5,109 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Join Queue</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .container {
-      background-color: #fff;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      max-width: 400px;
-      width: 100%;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-    }
-
-    label {
-      margin-bottom: 0.5rem;
-      font-weight: bold;
-    }
-
-    input {
-      padding: 0.5rem;
-      margin-bottom: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-
-    button {
-      padding: 0.75rem;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    #message {
-      margin-top: 1rem;
-      font-size: 1rem;
-      color: green;
-      text-align: center;
-    }
-
-    #teamInfo {
-      margin-top: 1rem;
-      font-size: 1rem;
-      text-align: center;
-      display: none; /* Initially hidden */
-    }
+     body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1b26;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #24273a;
+            border-radius: 10px;
+            padding: 2rem;
+            width: 300px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        h1 {
+            background: linear-gradient(to right, #c792ea, #ff79c6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 0.1rem;
+            font-size: 20px;
+        }
+        .subtitle {
+            color: #2960c7;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        img{
+            height: 60px;
+            width: 130px;
+            margin: 0 auto 1.5rem;
+        }
+        label {
+            color: #c792ea;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #363b54;
+            color: #ffffff;
+           
+        }
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(to right, #c792ea, #ff79c6);
+            color: #ffffff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        button:hover {
+            opacity: 0.7;
+        }
+        #randomNumberModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #24273a;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Join Team</h1>
+    <h1>Made By</h1>
+    <div style="text-align: center;">
+      <img src="https://github.com/arya-sr/fossucek/blob/main/mulearnfossBanner-removebg-preview_1%5B1%5D.png?raw=true" alt="Oops! Couldn't load image">
+      </div>
+      <h1 style="font-size: 30px;margin-bottom: 15px;">Join Team</h1>
     <form id="joinQueueForm">
       <label for="name">Name:</label>
       <input type="text" id="name" name="name" required>
@@ -112,7 +136,7 @@ document.getElementById('joinQueueForm').addEventListener('submit', function(eve
   const teamInfoElement = document.getElementById('teamInfo');
 
   // Use the admin_input_id in the API call to submit the user's info
-  fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
+  fetch(`https://qr-team-up.onrender.com/queue/${adminInputId}/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -131,7 +155,7 @@ document.getElementById('joinQueueForm').addEventListener('submit', function(eve
 
       // Poll the backend every few seconds to check how many users are remaining
       const pollForTeams = setInterval(() => {
-        fetch(`http://127.0.0.1:8000/teams/${adminInputId}/`)
+        fetch(`https://qr-team-up.onrender.com/teams/${adminInputId}/`)
         .then(response => response.json())
         .then(teamData => {
           if (teamData.status === 'incomplete') {
