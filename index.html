@@ -93,72 +93,94 @@
       
       <button type="submit">Join Queue</button>
       <p id="message"></p>
-      <p id="teamInfo"></p> <!-- Team info element -->
-    </form>
+     
+    </form> <p id="teamInfo"></p> <!-- Team info element -->
   </div>
 
 <script>
-  document.getElementById('joinQueueForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+document.getElementById('joinQueueForm').addEventListener('submit', function(event) {
+  event.preventDefault();
 
-    const name = document.getElementById('name').value;
-    const phone = document.getElementById('phone').value;
+  const name = document.getElementById('name').value;
+  const phone = document.getElementById('phone').value;
 
-    // Get the admin_input_id from the URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const adminInputId = urlParams.get('admin_input_id');
+  // Get the admin_input_id from the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const adminInputId = urlParams.get('admin_input_id');
 
-    const messageElement = document.getElementById('message');
-    const teamInfoElement = document.getElementById('teamInfo');
+  const messageElement = document.getElementById('message');
+  const teamInfoElement = document.getElementById('teamInfo');
 
-    // Use the admin_input_id in the API call
-    fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name, phone })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.error) {
-        messageElement.style.color = 'red';
-        messageElement.textContent = data.error;
-        teamInfoElement.style.display = 'none'; // Hide team info
-      } else {
-        messageElement.style.color = 'green';
-        messageElement.textContent = `Success: ${data.message}`;
-
-        // Fetch the team assignments
-        fetch(`http://127.0.0.1:8000/teams/${adminInputId}/`)
-        .then(response => response.json())
-        .then(teamData => {
-          // Find the user's team based on their position
-          const userQueuePosition = data.queue_position; // Use the queue position returned by the first API call
-          const userTeam = teamData.find(user => user.queue_position === userQueuePosition);
-
-          if (userTeam) {
-            teamInfoElement.style.color = 'blue';
-            teamInfoElement.textContent = `Your team: ${userTeam.team}`; // Show team name
-          } else {
-            teamInfoElement.textContent = `Team assignment not found.`;
-          }
-          teamInfoElement.style.display = 'block'; // Show the team info
-          document.getElementById('joinQueueForm').style.display = 'none'; // Hide the form
-        })
-        .catch(error => {
-          teamInfoElement.style.color = 'red';
-          teamInfoElement.textContent = 'Error fetching team assignment.';
-          teamInfoElement.style.display = 'block'; // Show error message
-        });
-      }
-    })
-    .catch(error => {
+  // Use the admin_input_id in the API call to submit the user's info
+  fetch(`http://127.0.0.1:8000/queue/${adminInputId}/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, phone }) // Send name and phone to server
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.error) {
       messageElement.style.color = 'red';
-      messageElement.textContent = 'An error occurred. Please try again.';
-      teamInfoElement.style.display = 'none'; // Hide team info
-    });
+      messageElement.textContent = data.error;
+      teamInfoElement.style.display = 'none'; // Hide team info if there's an error
+    } else {
+      messageElement.style.color = 'green';
+      messageElement.textContent = `Success: ${data.message}`;
+
+      // Fetch the team assignments for the admin_input_id
+      fetch(`http://127.0.0.1:8000/teams/${adminInputId}/`)
+      .then(response => response.json())
+      .then(teamData => {
+        // Find the user's team by matching their name or phone
+        const userTeam = teamData.find(user => user.name === name || user.phone === phone);
+        
+        if (userTeam) {
+          const teamNumber = userTeam.team;  // Get the user's team number
+          teamInfoElement.style.color = 'blue';
+          teamInfoElement.textContent = `Your team: ${teamNumber}`; // Show team name
+
+          // Find other team members in the same team
+          const teamMembers = teamData.filter(user => user.team === teamNumber);
+
+          // Create a div to show the team members
+          const teamMembersElement = document.createElement('div');
+          teamMembersElement.style.marginTop = '10px';
+          teamMembersElement.innerHTML = '<strong>Team Members:</strong><br>';
+
+          // Append each member to the teamMembersElement
+          teamMembers.forEach(member => {
+            if (member.name !== name) {  // Exclude the current user from the team members list
+              const memberElement = document.createElement('div');
+              memberElement.textContent = member.name;
+              teamMembersElement.appendChild(memberElement);
+            }
+          });
+
+          // Append the team members list to the teamInfoElement
+          teamInfoElement.appendChild(teamMembersElement);
+        } else {
+          teamInfoElement.textContent = `Team assignment not found.`;
+        }
+
+        teamInfoElement.style.display = 'block'; // Show the team info
+        document.getElementById('joinQueueForm').style.display = 'none'; // Hide the form
+      })
+      .catch(error => {
+        teamInfoElement.style.color = 'red';
+        teamInfoElement.textContent = 'Error fetching team assignment.';
+        teamInfoElement.style.display = 'block'; // Show error message
+      });
+    }
+  })
+  .catch(error => {
+    messageElement.style.color = 'red';
+    messageElement.textContent = 'An error occurred. Please try again.';
+    teamInfoElement.style.display = 'none'; // Hide team info in case of error
   });
+});
+
 </script>
 
 </body>
