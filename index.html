@@ -129,49 +129,44 @@ document.getElementById('joinQueueForm').addEventListener('submit', function(eve
       messageElement.style.color = 'green';
       messageElement.textContent = `Success: ${data.message}`;
 
-      // Fetch the team assignments for the admin_input_id
-      fetch(`http://127.0.0.1:8000/teams/${adminInputId}/`)
-      .then(response => response.json())
-      .then(teamData => {
-        // Find the user's team by matching their name or phone
-        const userTeam = teamData.find(user => user.name === name || user.phone === phone);
-        
-        if (userTeam) {
-          const teamNumber = userTeam.team;  // Get the user's team number
-          teamInfoElement.style.color = 'blue';
-          teamInfoElement.textContent = `Your team: ${teamNumber}`; // Show team name
-
-          // Find other team members in the same team
-          const teamMembers = teamData.filter(user => user.team === teamNumber);
-
-          // Create a div to show the team members
-          const teamMembersElement = document.createElement('div');
-          teamMembersElement.style.marginTop = '10px';
-          teamMembersElement.innerHTML = '<strong>Team Members:</strong><br>';
-
-          // Append each member to the teamMembersElement
-          teamMembers.forEach(member => {
-            if (member.name !== name) {  // Exclude the current user from the team members list
-              const memberElement = document.createElement('div');
-              memberElement.textContent = member.name;
-              teamMembersElement.appendChild(memberElement);
+      // Poll the backend every few seconds to check how many users are remaining
+      const pollForTeams = setInterval(() => {
+        fetch(`http://127.0.0.1:8000/teams/${adminInputId}/`)
+        .then(response => response.json())
+        .then(teamData => {
+          if (teamData.status === 'incomplete') {
+            messageElement.style.color = 'orange';
+            messageElement.textContent = `Waiting for ${teamData.remaining} more to join...`;  // Updated with the correct remaining count
+          } else if (teamData.status === 'complete') {
+            clearInterval(pollForTeams);  // Stop polling once all users have joined
+            teamInfoElement.style.color = 'blue';
+            
+            // Show the user's team and other team members
+            const userTeam = Object.values(teamData.teams).find(team => 
+              team.some(user => user.name === name || user.phone === phone)
+            );
+            
+            if (userTeam) {
+              teamInfoElement.innerHTML = `<strong>Your Team Members:</strong><br>`;
+              userTeam.forEach(member => {
+                const memberElement = document.createElement('div');
+                memberElement.textContent = member.name;
+                teamInfoElement.appendChild(memberElement);
+              });
+            } else {
+              teamInfoElement.textContent = 'Team assignment not found.';
             }
-          });
 
-          // Append the team members list to the teamInfoElement
-          teamInfoElement.appendChild(teamMembersElement);
-        } else {
-          teamInfoElement.textContent = `Team assignment not found.`;
-        }
-
-        teamInfoElement.style.display = 'block'; // Show the team info
-        document.getElementById('joinQueueForm').style.display = 'none'; // Hide the form
-      })
-      .catch(error => {
-        teamInfoElement.style.color = 'red';
-        teamInfoElement.textContent = 'Error fetching team assignment.';
-        teamInfoElement.style.display = 'block'; // Show error message
-      });
+            teamInfoElement.style.display = 'block';  // Show team info
+          }
+        })
+        .catch(error => {
+          clearInterval(pollForTeams);
+          teamInfoElement.style.color = 'red';
+          teamInfoElement.textContent = 'Error fetching team assignment.';
+          teamInfoElement.style.display = 'block'; // Show error message
+        });
+      }, 3000);  // Poll every 3 seconds
     }
   })
   .catch(error => {
@@ -180,6 +175,7 @@ document.getElementById('joinQueueForm').addEventListener('submit', function(eve
     teamInfoElement.style.display = 'none'; // Hide team info in case of error
   });
 });
+
 
 </script>
 
